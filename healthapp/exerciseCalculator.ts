@@ -42,13 +42,15 @@ export const calculateExercises = (exercises_hours: number[], target: number): E
 	}
 	return { periodLength, trainingDays, success, rating, ratingDescription, target, average };
 };
-try {
-	const { target, hours } = parseArguments(process.argv);
-	console.log(calculateExercises(hours, target));
-} catch(error: unknown) {
-	let errorMsg = 'Something bad happened.';
-	if (error instanceof Error) {
-		errorMsg += ' Error: ' + error.message;
+if (process.argv[1] === import.meta.filename) {
+	try {
+		const { target, hours } = parseArguments(process.argv);
+		console.log(calculateExercises(hours, target));
+	} catch(error: unknown) {
+		let errorMsg = 'Something bad happened.';
+		if (error instanceof Error) {
+			errorMsg += ' Error: ' + error.message;
+		}
+		console.log(errorMsg);
 	}
-	console.log(errorMsg);
 }
