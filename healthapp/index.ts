@@ -1,11 +1,11 @@
-import express from 'express'
+import express from 'express';
 import { calculateBmi } from './bmiCalculator.ts';
-const app = express()
+const app = express();
 app.get('/hello', (_request, response) => {
 	response.send('Hello Full Stack!');
-})
+});
 app.get('/bmi', (request, response) => {
-	const { height, weight } = request.query
+	const { height, weight } = request.query;
 	if (!height || !weight || isNaN(Number(height)) || isNaN(Number(weight))) {
 		response.status(400).json({ error: 'malformatted parameters' });
 		return ;
@@ -18,8 +18,8 @@ app.get('/bmi', (request, response) => {
 		height: heightNum,
 		bmi: bmi,
 	});
-})
+});
 const PORT = 3001;
 app.listen(PORT, () => {
-	console.log(`Server running on port ${PORT}`)
-})
+	console.log(`Server running on port ${PORT}`);
+});
