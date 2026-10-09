@@ -10,7 +10,7 @@
     "calculateBmi": "tsx bmiCalculator.ts",
     "calculateExercises": "tsx exerciseCalculator.ts",
     "dev": "concurrently \"tsc --watch\" \"node --watch index.ts\"",
-    "start": "tsx index.ts",
+    "start": "node --experimental-transform-types index.ts",
     "lint": "eslint ."
   },
   "devDependencies": {
