@@ -2,13 +2,14 @@
 	"type": "module",
 	"scripts": {
 		"tsc": "tsc",
-    "dev": "concurrently \"tsc --watch\" \"node --watch --experimental-transform-types index.ts\"",
-    "start": "node --experimental-transform-types index.ts",
+		"dev": "concurrently \"tsc --watch\" \"node --watch --experimental-transform-types index.ts\"",
+		"start": "node --experimental-transform-types index.ts",
 		"lint": "eslint ."
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
 		"@stylistic/eslint-plugin": "^5.10.0",
+		"@types/cors": "^2.8.19",
 		"@types/express": "^5.0.6",
 		"concurrently": "^10.0.6",
 		"eslint": "^10.12.0",
@@ -16,6 +17,7 @@
 		"typescript-eslint": "^8.71.1"
 	},
 	"dependencies": {
+		"cors": "^2.8.6",
 		"express": "^5.2.1"
 	}
 }
