@@ -1,5 +1,5 @@
 import { createDiary } from "../services/diaryService";
-import { type NewDiaryEntry, type NonSensitiveDiaryEntry } from "../types";
+import { type Visibility, type Weather, type NewDiaryEntry, type NonSensitiveDiaryEntry } from "../types";
 import React, { useState } from "react";
 import axios from "axios";
 interface NewDiaryProps {
@@ -31,8 +31,8 @@ export const NewDiary = (props: NewDiaryProps) => {
 		try {
 			const newDiary: NewDiaryEntry = {
 				date,
-				visibility: visibility as any,
-				weather: weather as any,
+				visibility: visibility as Visibility,
+				weather: weather as Weather,
 				comment
 			};
 			const res = await createDiary(newDiary);
