@@ -1,5 +1,5 @@
 import { createDiary } from "../services/diaryService";
-import { type Visibility, type Weather, type NewDiaryEntry, type NonSensitiveDiaryEntry } from "../types";
+import { Visibility, Weather, type NewDiaryEntry, type NonSensitiveDiaryEntry } from "../types";
 import React, { useState } from "react";
 import axios from "axios";
 interface NewDiaryProps {
@@ -22,8 +22,8 @@ const Notification = (props: NotificationProps) => {
 export const NewDiary = (props: NewDiaryProps) => {
 	const {diaries, setDiaries} = props;
 	const [date, setDate] = useState('');
-	const [visibility, setVisibility] = useState("");
-	const [weather, setWeather] = useState("");
+	const [visibility, setVisibility] = useState<Visibility>(Visibility.Ok);
+	const [weather, setWeather] = useState<Weather>(Weather.Sunny);
 	const [comment, setComment] = useState("");
 	const [msg, setMsg] = useState("");
 	const addDiary = async (event: React.SyntheticEvent) => {
@@ -31,18 +31,17 @@ export const NewDiary = (props: NewDiaryProps) => {
 		try {
 			const newDiary: NewDiaryEntry = {
 				date,
-				visibility: visibility as Visibility,
-				weather: weather as Weather,
+				visibility,
+				weather,
 				comment
 			};
 			const res = await createDiary(newDiary);
 			setDiaries(diaries.concat(res));
 			setDate('');
-			setVisibility('');
-			setWeather('');
+			setVisibility(Visibility.Ok);
+			setWeather(Weather.Sunny);
 			setComment('');
 		}	catch (error: unknown) {
-			console.log(error);
 			if (axios.isAxiosError(error)) {
 	  	  if (error.response && typeof error.response.data === 'string') {
 	  	    setMsg(error.response.data);
@@ -65,10 +64,34 @@ export const NewDiary = (props: NewDiaryProps) => {
 			<Notification msg={msg} />
 			<form onSubmit={addDiary}>
 				<div>
-					weather:<input name="weather" value={weather} onChange={e => setWeather(e.target.value)}/>
-					<br />
-					visibility:<input name="visibility" value={visibility} onChange={e => setVisibility(e.target.value)}/>
-					<br />
+					<span>visibility</span>
+					{Object.values(Visibility).map((val) => (
+						<label key={val}> {val}
+						<input 
+							type="radio"
+							name="visibility"
+							value={val}
+							checked={visibility === val}
+							onChange={() => setVisibility(val)}
+						/>
+						</label>
+					))}
+				</div>
+				<div>
+					<span>weather</span>
+					{Object.values(Weather).map((val) => (
+						<label key={val}> {val}
+						<input 
+							type="radio"
+							name="weather"
+							value={val}
+							checked={weather === val}
+							onChange={() => setWeather(val)}
+						/>
+						</label>
+					))}
+				</div>
+				<div>
 					date:<input name="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
 					<br />
 					comment:<input name="comment" value={comment} onChange={e => setComment(e.target.value)}/>
