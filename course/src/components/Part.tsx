@@ -38,6 +38,6 @@ export const Part = (props: PartProps) => {
 				</div>
 			)
 		default:
-			assertNever(props.part);
+			return assertNever(props.part);
 	}
 };
