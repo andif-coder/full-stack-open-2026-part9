@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAll } from "./services/diaryService";
 import { type NonSensitiveDiaryEntry } from "./types";
+import { NewDiary } from "./components/DiaryForm";
 const App = () => {
 	const [diaries, setDiaries] = useState<NonSensitiveDiaryEntry[]>([]);
 	useEffect(() => {
@@ -19,6 +20,7 @@ const App = () => {
 					<p>weather: {d.weather}</p>
 				</div>
 			))}
+			<NewDiary diaries={diaries} setDiaries={setDiaries}/>
     </div>
   );
 };
