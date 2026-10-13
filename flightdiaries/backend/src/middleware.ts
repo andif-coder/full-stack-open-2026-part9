@@ -13,7 +13,8 @@ export const newDiaryParser = (req: Request, _res: Response, next: NextFunction)
 
 export const errorMiddleware = (error: unknown, _req: Request, res: Response, next: NextFunction) => {
   if (error instanceof z.ZodError) {
-    res.status(400).send({ error: error.issues });
+		const errorMessage = error.issues.map(i => i.message).join(', ');
+		res.status(400).send(`Error: ${errorMessage}`);
   } else {
     next(error);
   }
