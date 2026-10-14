@@ -11,14 +11,18 @@ export const PatientPage = () => {
 	const { id } = useParams<{ id: string }>();
 	const [patient, setPatient] = useState<Patient | null>(null);
 	useEffect(() => {
-		if (id) {
-			try {
-				patientService.getOne(id).then(res => { setPatient(res); });
-			} catch(error: unknown) {
-				console.error(error);
+			const fetchPatient = async () => {
+				if (id) {
+					try {
+						const res = await patientService.getOne(id);
+						setPatient(res);
+					} catch(error: unknown) {
+						console.error(error);
+					}
+				}
 			}
-		}
-	}, [id]);
+			void fetchPatient();
+		}, [id]);
 	if (!patient) {
 		return <div>loading...</div>;
 	}
@@ -36,6 +40,34 @@ export const PatientPage = () => {
 		  <Typography variant="body1">ssn: {patient.ssn}</Typography>
 		  <Typography variant="body1">occupation: {patient.occupation}</Typography>
 		  <Typography variant="body1">date of birth: {patient.dateOfBirth}</Typography>
+			<Typography variant="h6" sx={{ mt: 3, mb: 1, fontWeight: "bold" }}>
+        entries
+      </Typography>
+
+      {patient.entries && patient.entries.length > 0 ? (
+        patient.entries.map((entry) => (
+          <Box key={entry.id} sx={{ mb: 2 }}>
+            <Typography variant="body1">
+              {entry.date} <i>{entry.description}</i>
+            </Typography>
+
+            {/* 如果该条目存在 diagnosisCodes，则渲染无序列表 */}
+            {entry.diagnosisCodes && entry.diagnosisCodes.length > 0 && (
+              <ul>
+                {entry.diagnosisCodes.map((code) => (
+                  <li key={code}>
+                    <Typography variant="body2">{code}</Typography>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Box>
+        ))
+      ) : (
+        <Typography variant="body2" color="textSecondary">
+          no entries
+        </Typography>
+      )}
 		</Box>
 	);
 };
