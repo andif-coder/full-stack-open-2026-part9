@@ -1,7 +1,8 @@
 import { useParams } from "react-router-dom";
 import patientService from "../services/patients";
+import diagnosisService from "../services/diagnosis";
 import { useEffect, useState } from "react";
-import { type Patient } from "../types";
+import { Diagnosis, type Patient } from "../types";
 import MaleIcon from '@mui/icons-material/Male';
 import FemaleIcon from '@mui/icons-material/Female';
 import TransgenderIcon from '@mui/icons-material/Transgender'; // 或者用其他替代图标表示 other
@@ -10,6 +11,7 @@ import { Typography, Box } from "@mui/material";
 export const PatientPage = () => {
 	const { id } = useParams<{ id: string }>();
 	const [patient, setPatient] = useState<Patient | null>(null);
+	const [diagnoses, setDiagnoses] = useState<Diagnosis[] | null>(null);
 	useEffect(() => {
 			const fetchPatient = async () => {
 				if (id) {
@@ -22,10 +24,20 @@ export const PatientPage = () => {
 				}
 			}
 			void fetchPatient();
-		}, [id]);
+	}, [id]);
+	useEffect(() => {
+		const fetchDiagnosis = async () => {
+			const res = await diagnosisService.getAll();
+			setDiagnoses(res);
+		}
+		void fetchDiagnosis();
+	}, []);
 	if (!patient) {
 		return <div>loading...</div>;
 	}
+	const diagnosisMap: Map<string, Diagnosis> | null = diagnoses ? new Map<string, Diagnosis>(
+		diagnoses.map(d => [d.code, d])
+	) : null;
 	return (
 		<Box sx={{ mt: 2, mb: 2 }}>
 		  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
@@ -56,7 +68,7 @@ export const PatientPage = () => {
               <ul>
                 {entry.diagnosisCodes.map((code) => (
                   <li key={code}>
-                    <Typography variant="body2">{code}</Typography>
+                    <Typography variant="body2">{code} {diagnosisMap?.get(code)?.name}</Typography>
                   </li>
                 ))}
               </ul>
