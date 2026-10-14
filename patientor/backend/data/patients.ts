@@ -40,6 +40,9 @@ const data: Patient[] = [
         "gender": "male",
         "occupation": "Digital evangelist"
     }
-];
+].map(p => ({
+	...p,
+	entries: []
+})) as Patient[];
 
 export default data;
