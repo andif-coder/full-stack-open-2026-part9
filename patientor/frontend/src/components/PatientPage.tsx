@@ -8,10 +8,14 @@ import FemaleIcon from '@mui/icons-material/Female';
 import TransgenderIcon from '@mui/icons-material/Transgender'; // 或者用其他替代图标表示 other
 import { Typography, Box } from "@mui/material";
 
-export const PatientPage = () => {
+interface PatientPageProps {
+	diagnoses: Diagnosis[];
+}
+
+export const PatientPage = (props: PatientPageProps) => {
 	const { id } = useParams<{ id: string }>();
+	const diagnoses = props.diagnoses;
 	const [patient, setPatient] = useState<Patient | null>(null);
-	const [diagnoses, setDiagnoses] = useState<Diagnosis[] | null>(null);
 	useEffect(() => {
 			const fetchPatient = async () => {
 				if (id) {
@@ -25,13 +29,6 @@ export const PatientPage = () => {
 			}
 			void fetchPatient();
 	}, [id]);
-	useEffect(() => {
-		const fetchDiagnosis = async () => {
-			const res = await diagnosisService.getAll();
-			setDiagnoses(res);
-		}
-		void fetchDiagnosis();
-	}, []);
 	if (!patient) {
 		return <div>loading...</div>;
 	}
