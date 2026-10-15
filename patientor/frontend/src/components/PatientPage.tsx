@@ -1,17 +1,16 @@
 import { useParams } from "react-router-dom";
 import patientService from "../services/patients";
-import diagnosisService from "../services/diagnosis";
 import { useEffect, useState } from "react";
 import { Diagnosis, type Patient } from "../types";
 import MaleIcon from '@mui/icons-material/Male';
 import FemaleIcon from '@mui/icons-material/Female';
 import TransgenderIcon from '@mui/icons-material/Transgender'; // 或者用其他替代图标表示 other
 import { Typography, Box } from "@mui/material";
+import { EntryDetails } from "./EntryDetails";
 
 interface PatientPageProps {
 	diagnoses: Diagnosis[];
 }
-
 export const PatientPage = (props: PatientPageProps) => {
 	const { id } = useParams<{ id: string }>();
 	const diagnoses = props.diagnoses;
@@ -54,24 +53,7 @@ export const PatientPage = (props: PatientPageProps) => {
       </Typography>
 
       {patient.entries && patient.entries.length > 0 ? (
-        patient.entries.map((entry) => (
-          <Box key={entry.id} sx={{ mb: 2 }}>
-            <Typography variant="body1">
-              {entry.date} <i>{entry.description}</i>
-            </Typography>
-
-            {/* 如果该条目存在 diagnosisCodes，则渲染无序列表 */}
-            {entry.diagnosisCodes && entry.diagnosisCodes.length > 0 && (
-              <ul>
-                {entry.diagnosisCodes.map((code) => (
-                  <li key={code}>
-                    <Typography variant="body2">{code} {diagnosisMap?.get(code)?.name}</Typography>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Box>
-        ))
+        patient.entries.map((entry) => (<EntryDetails key={entry.id} diagnosisMap={diagnosisMap} entry={entry}/>))
       ) : (
         <Typography variant="body2" color="textSecondary">
           no entries
