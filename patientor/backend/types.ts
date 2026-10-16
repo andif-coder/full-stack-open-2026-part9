@@ -1,5 +1,5 @@
 import { z } from "zod";
-export const GenderType = {
+export const Gender = {
 	Male: 'male',
 	Female: 'female',
 	Other: 'other'
@@ -9,7 +9,7 @@ export interface Diagnosis {
 	name: string;
 	latin?: string;
 }
-export type GenderType = typeof GenderType[keyof typeof GenderType];
+export type Gender = typeof Gender[keyof typeof Gender];
 
 export const BaseEntrySchema = z.object({
   description: z.string().min(1),
@@ -70,7 +70,7 @@ export const NewPatientEntrySchema = z.object({
 	name: z.string(),
 	dateOfBirth: z.iso.date(),
 	ssn: z.string(),
-	gender: z.enum(GenderType),
+	gender: z.enum(Gender),
 	occupation: z.string()
 });
 export type NewPatient = z.infer<typeof NewPatientEntrySchema>;

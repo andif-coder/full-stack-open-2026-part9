@@ -1,12 +1,12 @@
 import { Dialog, DialogTitle, DialogContent, Divider, Alert } from '@mui/material';
 
 import AddPatientForm from "./AddPatientForm";
-import { PatientFormValues } from "../../types";
+import { NewPatient } from "../../types";
 
 interface Props {
   modalOpen: boolean;
   onClose: () => void;
-  onSubmit: (values: PatientFormValues) => void;
+  onSubmit: (values: NewPatient) => void;
   error?: string;
 }
 
