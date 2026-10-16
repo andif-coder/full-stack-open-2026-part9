@@ -7,6 +7,7 @@ import FemaleIcon from '@mui/icons-material/Female';
 import TransgenderIcon from '@mui/icons-material/Transgender'; // 或者用其他替代图标表示 other
 import { Typography, Box } from "@mui/material";
 import { EntryDetails } from "./EntryDetails";
+import { AddEntry } from "./AddEntry";
 
 interface PatientPageProps {
 	diagnoses: Diagnosis[];
@@ -59,6 +60,9 @@ export const PatientPage = (props: PatientPageProps) => {
           no entries
         </Typography>
       )}
+			{
+				<AddEntry setPatient={setPatient} patient={patient} />
+			}
 		</Box>
 	);
 };
