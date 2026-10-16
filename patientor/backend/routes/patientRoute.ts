@@ -1,6 +1,6 @@
 import express, { type Response } from 'express';
 import patientService from '../services/patientService.ts';
-import type { NonSensitivePatient } from '../types.ts';
+import { NewEntrySchema, type NonSensitivePatient } from '../types.ts';
 import { parseNewPatient } from '../utils.ts';
 import { z } from 'zod';
 const router = express.Router();
@@ -32,5 +32,22 @@ router.get('/:id', (req, res) => {
 		return ;
 	}
 	res.json(patient);
+});
+router.post('/:id/entries', (req, res) => {
+	const { id } = req.params;
+	const parseResult = NewEntrySchema.safeParse(req.body);
+	if (!parseResult.success) {
+		return res.status(400).json({ error: parseResult.error.issues });
+	}
+	try {
+		const addedEntry = patientService.addEntry(id, parseResult.data);
+		return res.status(201).json(addedEntry);
+	} catch (error: unknown) {
+		let errorMessage = "Something went wrong.";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    return res.status(404).json({ error: errorMessage });
+	}
 });
 export default router;
