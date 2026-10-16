@@ -20,6 +20,7 @@ interface AddEntryProps {
   patient: Patient | null;
   setPatient: Dispatch<SetStateAction<Patient | null>>;
   diagnoses?: Diagnosis[] | null;
+  onClose?: () => void;
 }
 
 interface ZodIssueItem {
@@ -42,7 +43,6 @@ const formatZodError = (errorData: unknown): string => {
 
 type EntryType = "HealthCheck" | "OccupationalHealthcare" | "Hospital";
 
-// 健康评级选项配置
 const healthRatingOptions = [
   { value: 0, label: "0 — Healthy" },
   { value: 1, label: "1 — Low Risk" },
@@ -51,7 +51,7 @@ const healthRatingOptions = [
 ];
 
 export const AddEntry = (props: AddEntryProps) => {
-  const { patient, setPatient, diagnoses = [] } = props;
+  const { patient, setPatient, diagnoses = [], onClose } = props;
 
   // 1. 条目类型
   const [entryType, setEntryType] = useState<EntryType>("HealthCheck");
@@ -87,6 +87,9 @@ export const AddEntry = (props: AddEntryProps) => {
     setSickLeaveStartDate("");
     setSickLeaveEndDate("");
     setError(null);
+    if (onClose) {
+      onClose();
+    }
   };
 
   const handleDiagnosisChange = (event: SelectChangeEvent<string[]>) => {
@@ -126,7 +129,6 @@ export const AddEntry = (props: AddEntryProps) => {
         };
         break;
       case "OccupationalHealthcare": {
-        // 只有两个日期均完整填写时才附加 sickLeave 对象，避免部分字段为空触发后端格式校验失败
         const hasSickLeave =
           sickLeaveStartDate.trim() !== "" && sickLeaveEndDate.trim() !== "";
 
@@ -230,7 +232,7 @@ export const AddEntry = (props: AddEntryProps) => {
           onChange={({ target }) => setSpecialist(target.value)}
         />
 
-        {/* 诊断代码多选下拉菜单（移除了冲突的 OutlinedInput，样式与外层 standard 统一） */}
+        {/* 诊断代码多选下拉菜单 */}
         <FormControl fullWidth variant="standard" sx={{ mb: 2 }}>
           <InputLabel id="diagnoses-multiple-select-label">Diagnosis codes</InputLabel>
           <Select
@@ -254,7 +256,7 @@ export const AddEntry = (props: AddEntryProps) => {
           </Select>
         </FormControl>
 
-        {/* 动态分支 1：HealthCheck 评级下拉选择 */}
+        {/* 动态分支 1：HealthCheck */}
         {entryType === "HealthCheck" && (
           <FormControl fullWidth variant="standard" sx={{ mb: 2 }}>
             <InputLabel id="health-rating-select-label">Health Check Rating</InputLabel>
@@ -272,7 +274,7 @@ export const AddEntry = (props: AddEntryProps) => {
           </FormControl>
         )}
 
-        {/* 动态分支 2：Hospital 出院日期与依据 */}
+        {/* 动态分支 2：Hospital */}
         {entryType === "Hospital" && (
           <Box sx={{ mb: 2, p: 1.5, bgcolor: "rgba(0, 0, 0, 0.02)", borderRadius: 1 }}>
             <Typography variant="subtitle2" sx={{ color: "text.secondary", mb: 1 }}>
@@ -298,7 +300,7 @@ export const AddEntry = (props: AddEntryProps) => {
           </Box>
         )}
 
-        {/* 动态分支 3：OccupationalHealthcare 雇主名与可选病假 */}
+        {/* 动态分支 3：OccupationalHealthcare */}
         {entryType === "OccupationalHealthcare" && (
           <Box sx={{ mb: 2 }}>
             <TextField
@@ -336,7 +338,7 @@ export const AddEntry = (props: AddEntryProps) => {
           </Box>
         )}
 
-        {/* 底部操作按钮 */}
+        {/* 底部按钮 */}
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
           <Button color="error" variant="contained" type="button" onClick={resetForm}>
             Cancel

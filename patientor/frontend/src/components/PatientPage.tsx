@@ -2,10 +2,10 @@ import { useParams } from "react-router-dom";
 import patientService from "../services/patients";
 import { useEffect, useState } from "react";
 import { Diagnosis, type Patient } from "../types";
-import MaleIcon from '@mui/icons-material/Male';
-import FemaleIcon from '@mui/icons-material/Female';
-import TransgenderIcon from '@mui/icons-material/Transgender';
-import { Typography, Box } from "@mui/material";
+import MaleIcon from "@mui/icons-material/Male";
+import FemaleIcon from "@mui/icons-material/Female";
+import TransgenderIcon from "@mui/icons-material/Transgender";
+import { Typography, Box, Button } from "@mui/material";
 import { EntryDetails } from "./EntryDetails";
 import { AddEntry } from "./AddEntry";
 
@@ -17,6 +17,7 @@ export const PatientPage = (props: PatientPageProps) => {
   const { id } = useParams<{ id: string }>();
   const diagnoses = props.diagnoses;
   const [patient, setPatient] = useState<Patient | null>(null);
+  const [showAddEntry, setShowAddEntry] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchPatient = async () => {
@@ -24,7 +25,7 @@ export const PatientPage = (props: PatientPageProps) => {
         try {
           const res = await patientService.getOne(id);
           setPatient(res);
-        } catch(error: unknown) {
+        } catch (error: unknown) {
           console.error(error);
         }
       }
@@ -36,9 +37,9 @@ export const PatientPage = (props: PatientPageProps) => {
     return <div>loading...</div>;
   }
 
-  const diagnosisMap: Map<string, Diagnosis> | null = diagnoses ? new Map<string, Diagnosis>(
-    diagnoses.map(d => [d.code, d])
-  ) : null;
+  const diagnosisMap: Map<string, Diagnosis> | null = diagnoses
+    ? new Map<string, Diagnosis>(diagnoses.map((d) => [d.code, d]))
+    : null;
 
   return (
     <Box sx={{ mt: 2, mb: 2 }}>
@@ -61,7 +62,7 @@ export const PatientPage = (props: PatientPageProps) => {
 
       {patient.entries && patient.entries.length > 0 ? (
         patient.entries.map((entry) => (
-          <EntryDetails key={entry.id} diagnosisMap={diagnosisMap} entry={entry}/>
+          <EntryDetails key={entry.id} diagnosisMap={diagnosisMap} entry={entry} />
         ))
       ) : (
         <Typography variant="body2" color="textSecondary">
@@ -69,8 +70,24 @@ export const PatientPage = (props: PatientPageProps) => {
         </Typography>
       )}
 
-      {/* 透传 diagnoses 给 AddEntry */}
-      <AddEntry setPatient={setPatient} patient={patient} diagnoses={diagnoses} />
+      {/* 条件渲染：默认显示 Add New Entry 按钮，点击展开表单；点击 Cancel 后收起 */}
+      {showAddEntry ? (
+        <AddEntry
+          setPatient={setPatient}
+          patient={patient}
+          diagnoses={diagnoses}
+          onClose={() => setShowAddEntry(false)}
+        />
+      ) : (
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{ mt: 2 }}
+          onClick={() => setShowAddEntry(true)}
+        >
+          Add New Entry
+        </Button>
+      )}
     </Box>
   );
 };
