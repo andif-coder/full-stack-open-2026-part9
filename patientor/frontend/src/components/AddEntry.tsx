@@ -1,4 +1,4 @@
-import type { Patient, Entry, NewEntry } from "../types";
+import type { Patient, Entry, NewEntry, Diagnosis } from "../types";
 import React, { useState, type Dispatch, type SetStateAction, type SyntheticEvent } from "react";
 import axios from "axios";
 import patientService from "../services/patients";
@@ -12,11 +12,14 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Chip,
+  SelectChangeEvent,
 } from "@mui/material";
 
 interface AddEntryProps {
   patient: Patient | null;
   setPatient: Dispatch<SetStateAction<Patient | null>>;
+  diagnoses?: Diagnosis[] | null;
 }
 
 interface ZodIssueItem {
@@ -39,27 +42,35 @@ const formatZodError = (errorData: unknown): string => {
 
 type EntryType = "HealthCheck" | "OccupationalHealthcare" | "Hospital";
 
-export const AddEntry = (props: AddEntryProps) => {
-  const { patient, setPatient } = props;
+// 健康评级选项配置
+const healthRatingOptions = [
+  { value: 0, label: "0 — Healthy" },
+  { value: 1, label: "1 — Low Risk" },
+  { value: 2, label: "2 — High Risk" },
+  { value: 3, label: "3 — Critical Risk" },
+];
 
-  // 1. 条目类型状态
+export const AddEntry = (props: AddEntryProps) => {
+  const { patient, setPatient, diagnoses = [] } = props;
+
+  // 1. 条目类型
   const [entryType, setEntryType] = useState<EntryType>("HealthCheck");
 
-  // 2. 公共基础字段状态
+  // 2. 基础通用字段
   const [description, setDescription] = useState<string>("");
   const [date, setDate] = useState<string>("");
   const [specialist, setSpecialist] = useState<string>("");
-  const [diagCode, setDiagCode] = useState<string>("");
+  const [selectedDiagnosisCodes, setSelectedDiagnosisCodes] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // 3. HealthCheck 专属状态
-  const [healthCheckRating, setHealthCheckRating] = useState<string>("0");
+  // 3. HealthCheck 专属
+  const [healthCheckRating, setHealthCheckRating] = useState<number>(0);
 
-  // 4. Hospital 专属状态
+  // 4. Hospital 专属
   const [dischargeDate, setDischargeDate] = useState<string>("");
   const [dischargeCriteria, setDischargeCriteria] = useState<string>("");
 
-  // 5. OccupationalHealthcare 专属状态
+  // 5. OccupationalHealthcare 专属
   const [employerName, setEmployerName] = useState<string>("");
   const [sickLeaveStartDate, setSickLeaveStartDate] = useState<string>("");
   const [sickLeaveEndDate, setSickLeaveEndDate] = useState<string>("");
@@ -68,8 +79,8 @@ export const AddEntry = (props: AddEntryProps) => {
     setDescription("");
     setDate("");
     setSpecialist("");
-    setDiagCode("");
-    setHealthCheckRating("0");
+    setSelectedDiagnosisCodes([]);
+    setHealthCheckRating(0);
     setDischargeDate("");
     setDischargeCriteria("");
     setEmployerName("");
@@ -78,24 +89,22 @@ export const AddEntry = (props: AddEntryProps) => {
     setError(null);
   };
 
+  const handleDiagnosisChange = (event: SelectChangeEvent<string[]>) => {
+    const value = event.target.value;
+    setSelectedDiagnosisCodes(typeof value === "string" ? value.split(",") : value);
+  };
+
   const addEntry = async (event: SyntheticEvent) => {
     event.preventDefault();
     if (!patient) return;
-
-    // 解析逗号分隔的诊断码
-    const diagnosisCodes = diagCode
-      .split(",")
-      .map((code) => code.trim())
-      .filter((code) => code.length > 0);
 
     const baseEntry = {
       description,
       date,
       specialist,
-      ...(diagnosisCodes.length > 0 && { diagnosisCodes }),
+      ...(selectedDiagnosisCodes.length > 0 && { diagnosisCodes: selectedDiagnosisCodes }),
     };
 
-    // 根据选中的类型动态组装符合 NewEntry 判别联合的 payload
     let newEntryPayload: NewEntry;
 
     switch (entryType) {
@@ -103,7 +112,7 @@ export const AddEntry = (props: AddEntryProps) => {
         newEntryPayload = {
           ...baseEntry,
           type: "HealthCheck",
-          healthCheckRating: Number(healthCheckRating),
+          healthCheckRating,
         };
         break;
       case "Hospital":
@@ -117,7 +126,10 @@ export const AddEntry = (props: AddEntryProps) => {
         };
         break;
       case "OccupationalHealthcare": {
-        const hasSickLeave = sickLeaveStartDate !== "" || sickLeaveEndDate !== "";
+        // 只有两个日期均完整填写时才附加 sickLeave 对象，避免部分字段为空触发后端格式校验失败
+        const hasSickLeave =
+          sickLeaveStartDate.trim() !== "" && sickLeaveEndDate.trim() !== "";
+
         newEntryPayload = {
           ...baseEntry,
           type: "OccupationalHealthcare",
@@ -136,7 +148,6 @@ export const AddEntry = (props: AddEntryProps) => {
     }
 
     try {
-      // 优先调用服务层封装的接口
       const addedEntry: Entry = await patientService.createEntry(patient.id, newEntryPayload);
 
       setPatient((prevPatient) => {
@@ -175,7 +186,7 @@ export const AddEntry = (props: AddEntryProps) => {
       )}
 
       <form onSubmit={addEntry}>
-        {/* 条目类型切换下拉框 */}
+        {/* 条目类型下拉框 */}
         <FormControl fullWidth variant="standard" sx={{ mb: 2 }}>
           <InputLabel id="entry-type-select-label">Entry type</InputLabel>
           <Select
@@ -189,15 +200,7 @@ export const AddEntry = (props: AddEntryProps) => {
           </Select>
         </FormControl>
 
-        {/* 公共字段 */}
-        <TextField
-          label="Description"
-          fullWidth
-          variant="standard"
-          sx={{ mb: 1.5 }}
-          value={description}
-          onChange={({ target }) => setDescription(target.value)}
-        />
+        {/* 日期选择器 */}
         <TextField
           label="Date"
           type="date"
@@ -208,38 +211,68 @@ export const AddEntry = (props: AddEntryProps) => {
           value={date}
           onChange={({ target }) => setDate(target.value)}
         />
+
+        <TextField
+          label="Description"
+          fullWidth
+          variant="standard"
+          sx={{ mb: 1.5 }}
+          value={description}
+          onChange={({ target }) => setDescription(target.value)}
+        />
+
         <TextField
           label="Specialist"
           fullWidth
           variant="standard"
-          sx={{ mb: 1.5 }}
+          sx={{ mb: 2 }}
           value={specialist}
           onChange={({ target }) => setSpecialist(target.value)}
         />
-        <TextField
-          label="Diagnosis Codes (comma-separated)"
-          placeholder="e.g. M24.2, M51.2"
-          fullWidth
-          variant="standard"
-          sx={{ mb: 2 }}
-          value={diagCode}
-          onChange={({ target }) => setDiagCode(target.value)}
-        />
 
-        {/* 动态分支 1：HealthCheck */}
+        {/* 诊断代码多选下拉菜单（移除了冲突的 OutlinedInput，样式与外层 standard 统一） */}
+        <FormControl fullWidth variant="standard" sx={{ mb: 2 }}>
+          <InputLabel id="diagnoses-multiple-select-label">Diagnosis codes</InputLabel>
+          <Select
+            labelId="diagnoses-multiple-select-label"
+            multiple
+            value={selectedDiagnosisCodes}
+            onChange={handleDiagnosisChange}
+            renderValue={(selected) => (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                {selected.map((val) => (
+                  <Chip key={val} label={val} size="small" />
+                ))}
+              </Box>
+            )}
+          >
+            {diagnoses?.map((diag) => (
+              <MenuItem key={diag.code} value={diag.code}>
+                {diag.code} — {diag.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* 动态分支 1：HealthCheck 评级下拉选择 */}
         {entryType === "HealthCheck" && (
-          <TextField
-            label="Health Check Rating (0-3)"
-            type="number"
-            fullWidth
-            variant="standard"
-            sx={{ mb: 2 }}
-            value={healthCheckRating}
-            onChange={({ target }) => setHealthCheckRating(target.value)}
-          />
+          <FormControl fullWidth variant="standard" sx={{ mb: 2 }}>
+            <InputLabel id="health-rating-select-label">Health Check Rating</InputLabel>
+            <Select
+              labelId="health-rating-select-label"
+              value={healthCheckRating}
+              onChange={(e) => setHealthCheckRating(Number(e.target.value))}
+            >
+              {healthRatingOptions.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         )}
 
-        {/* 动态分支 2：Hospital */}
+        {/* 动态分支 2：Hospital 出院日期与依据 */}
         {entryType === "Hospital" && (
           <Box sx={{ mb: 2, p: 1.5, bgcolor: "rgba(0, 0, 0, 0.02)", borderRadius: 1 }}>
             <Typography variant="subtitle2" sx={{ color: "text.secondary", mb: 1 }}>
@@ -265,7 +298,7 @@ export const AddEntry = (props: AddEntryProps) => {
           </Box>
         )}
 
-        {/* 动态分支 3：OccupationalHealthcare */}
+        {/* 动态分支 3：OccupationalHealthcare 雇主名与可选病假 */}
         {entryType === "OccupationalHealthcare" && (
           <Box sx={{ mb: 2 }}>
             <TextField
@@ -303,7 +336,7 @@ export const AddEntry = (props: AddEntryProps) => {
           </Box>
         )}
 
-        {/* 底部按钮 */}
+        {/* 底部操作按钮 */}
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}>
           <Button color="error" variant="contained" type="button" onClick={resetForm}>
             Cancel
